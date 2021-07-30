@@ -52,30 +52,37 @@ def main():
 
 	for (artist_id, ) in cursor.fetchall():
 
-	# 테이블에서 가져온 artist_id로 api에서 top_tracks 데이터 가져오기
-	URL = "https://api.spotify.com/v1/artists/{}/top-tracks".format(artist_id) # endpoint
-	params = {
-		'country': 'US'
-	}
-
-	r = requests.get(URL, params=params, headers=headers)
-	
-	raw = json.loads(r.text)
-	
-	for track in raw['tracks']:
-
-		# 가져온 데이터에는 우리의 key값이 없기 때문에 key를 추가
-		data = {
-			'artist_id': artist_id
+		# 테이블에서 가져온 artist_id로 api에서 top_tracks 데이터 가져오기
+		URL = "https://api.spotify.com/v1/artists/{}/top-tracks".format(artist_id) # endpoint
+		params = {
+			'country': 'US'
 		}
 
-		# 가져온 데이터를 data에 업데이트해서 key + track를 만듦
-		data.update(track)
+		r = requests.get(URL, params=params, headers=headers)
 
-		# Create new item: track을 id값으로 나눠서 저장하겠다
-		table.put_item(
-			Item=data
-		)
+		raw = json.loads(r.text)
+
+		for track in raw['tracks']:
+
+			# 가져온 데이터에는 우리의 key값이 없기 때문에 key를 추가
+			data = {
+				'artist_id': artist_id
+			}
+
+			# 가져온 데이터를 data에 업데이트해서 key + track를 만듦
+			data.update(track)
+
+			# Single item INSERT: track을 id값으로 나눠서 저장하겠다
+			# 테이블에 데이터가 들어간 것을 확인 가능!
+			table.put_item(
+				Item=data
+			)
+
+			# batch 형식으로 item을 불러올 수도 있다.
+			# with table.batch_writer() as batch:
+			# 	batch.put_item(
+			#		Item=data
+			#	)	
 	
 	
 	
