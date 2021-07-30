@@ -9,6 +9,9 @@ import json
 import logging
 import pymysql
 
+# querying, scanning 쓸 때 필요
+from boto3.dynamodb.conditions import Key, Attr
+
 # spotify api 사용 위한 정보 추가
 client_id = ""
 client_secret = ""
@@ -72,21 +75,39 @@ def main():
 			# 가져온 데이터를 data에 업데이트해서 key + track를 만듦
 			data.update(track)
 
-			# Single item INSERT: track을 id값으로 나눠서 저장하겠다
-			# 테이블에 데이터가 들어간 것을 확인 가능!
+			### Put : 데이터 저장하기
+			# 1. Single item: track을 id값으로 나눠서 저장하겠다
 			table.put_item(
 				Item=data
 			)
-
-			# batch 형식으로 item을 불러올 수도 있다.
+			# 2. batch 형식
 			# with table.batch_writer() as batch:
 			# 	batch.put_item(
 			#		Item=data
 			#	)	
+			
+	### Get : 데이터 불러오기
+	response = table.get_item(
+		Key=(
+			'artist_id': '00FQb4jTyendYWaN8pK0wa'
+			'id': '0Oqc0kKFsQ6MhFOLBNZIGX'
+		)
+	)	
+	# querying
+	response2 = table.query(
+		# key로 가져올 때
+		KeyConditionExpression=Key('artist_id').eq('00FQb4jTyendYWaN8pK0wa'),
+		# 조건으로 가져올 때
+		FilterExpression=Attr('popularity').gt(80)
+	)
+	# scanning
+	response3 = table.scan(
+		FilterExpression=Attr('popularity').gt(80)
+	)	
 	
 	
 	
-	
+
 	
 def get_headers(client_id, client_secret):
         endpoint = "https://accounts.spotify.com/api/token"
